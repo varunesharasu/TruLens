@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📰 Fake News Detection</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            resize: vertical;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .real {
+            background: linear-gradient(135deg, #d4edda 0%, #a3d9a4 100%);
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        .fake {
+            background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        .result h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result p {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .result strong {
+            color: #333;
+        }
+
+        .stats {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stats h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .stats p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .keywords {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .notification {
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 500;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .notification {
+                left: 10px;
+                right: 10px;
+                top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-newspaper"></i> Fake News Detection</h1>
+        <p class="subtitle">Verify news authenticity with advanced keyword matching technology</p>
+
+        <div class="input-group">
+            <label for="newsInput"><i class="fas fa-edit"></i> News Article</label>
+            <textarea id="newsInput" placeholder="Paste your news article here to check its authenticity..."></textarea>
+        </div>
+
+        <div class="button-group">
+            <button onclick="detectNews()" id="detectBtn">
+                <i class="fas fa-search"></i> Detect Fake News
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            <i class="fas fa-spinner"></i> Analyzing news article...
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <div class="stats">
+            <h4><i class="fas fa-chart-bar"></i> System Stats</h4>
+            <p>Real-time news verification powered by Times of India & The Hindu</p>
+        </div>
+    </div>
+
+    <script>
+        async function detectNews() {
+            const text = document.getElementById('newsInput').value.trim();
+            const button = document.getElementById('detectBtn');
+
+            if (!text) {
+                showNotification('Please enter some text to analyze.', 'error');
+                return;
+            }
+
+            // Disable button and show loading
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text }),
+                });
+
+                const data = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                resultDiv.className = data.prediction === 'Fake News' ? 'result fake' : 'result real';
+
+                let verificationInfo = '';
+                if (data.verification_method === 'Database Match') {
+                    verificationInfo = `<p><strong><i class="fas fa-globe"></i> Source:</strong> ${data.source}</p>`;
+                }
+
+                let matchedKeywordsInfo = '';
+                if (data.matched_keywords && data.matched_keywords.length > 0) {
+                    matchedKeywordsInfo = `<p><strong><i class="fas fa-key"></i> Matched Keywords:</strong> <span class="keywords">${data.matched_keywords.join(', ')}</span></p>`;
+                }
+
+                let icon = data.prediction === 'Real News' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
+
+                resultDiv.innerHTML = `
+                    <h3>${icon} ${data.prediction}</h3>
+                    <p><strong><i class="fas fa-percentage"></i> Confidence:</strong> ${(data.confidence * 100).toFixed(1)}%</p>
+                    <p><strong><i class="fas fa-shield-alt"></i> Verification Method:</strong> ${data.verification_method}</p>
+                    ${verificationInfo}
+                    ${matchedKeywordsInfo}
+                `;
+
+                // Reset button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-search"></i> Detect Fake News';
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                showNotification('An error occurred. Please try again.', 'error');
+
+                // Reset button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-search"></i> Detect Fake News';
+            }
+        }
+
+        function showNotification(message, type) {
+            // Remove existing notification
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
+                ${message}
+            `;
+
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? '#dc3545' : '#28a745'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
