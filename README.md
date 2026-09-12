@@ -150,7 +150,7 @@ Contributions are welcome. For small fixes, open a PR with a clear description. 
 
 ## License
 
-This project is distributed under the terms in the `LICENSE` file in the repository root.
+This project is distributed under the terms in the `LICENSE` file in the repository roots.
 
 ## Acknowledgements
 
